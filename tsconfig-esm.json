@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "target": "ES2018",
+    "outDir": "lib/esm"
+  },
+  "files": ["./src/index.ts", "./src/styles.d.ts"],
+  "include": []
+}

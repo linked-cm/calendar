@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "target": "ES2018",
+    "outDir": "lib/cjs"
+  },
+  "files": ["./src/index.ts", "./src/styles.d.ts"],
+  "include": []
+}

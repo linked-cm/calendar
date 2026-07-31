@@ -16,6 +16,9 @@ their own canonical Shape verbs. The package never becomes an authoritative even
   may override those seams, but the package does not own a Serve or Create Now palette.
 - English source copy and stable translation keys live in `src/translations/en.json`. Consumers may pass a
   translated `labels` contract without forking the component or its markup.
+- RFC 5545 recurrence strings are parsed by the BSD-3-Clause `rrule` package behind the bounded
+  `expandRule`/`expandEvents` adapter. RRULE, DTSTART, RDATE, and EXDATE remain graph-authored inputs; the
+  returned occurrences are view projections only.
 
 ```tsx
 import { Calendar, type CalEventData } from '@_linked/calendar';

@@ -4,7 +4,7 @@
   "description": "A shape-agnostic, controlled LINKED calendar engine shared by Serve and Create Now applications.",
   "linkedPackage": true,
   "type": "module",
-  "main": "lib/esm/index.js",
+  "main": "lib/cjs/index.js",
   "module": "lib/esm/index.js",
   "types": "lib/esm/index.d.ts",
   "license": "ISC",
@@ -20,7 +20,8 @@
     "lib",
     "src/translations/en.json",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
   ],
   "sideEffects": [
     "./src/package.ts",
@@ -32,36 +33,41 @@
   "linkedTranslationCatalog": "src/translations/en.json",
   "scripts": {
     "start": "npm exec linked dev",
-    "build": "npm exec linked build",
+    "build": "npm exec linked build && node ./scripts/verify-build.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --config vitest.config.ts",
-    "prepublishOnly": "npm exec linked build production",
+    "prepublishOnly": "npm exec linked build production && node ./scripts/verify-build.mjs",
     "postpublish": "npm exec linked register"
   },
   "exports": {
     ".": {
       "types": "./lib/esm/index.d.ts",
       "development": "./src/index.ts",
-      "import": "./lib/esm/index.js"
+      "import": "./lib/esm/index.js",
+      "require": "./lib/cjs/index.js"
     },
     "./package": {
       "types": "./lib/esm/package.d.ts",
       "development": "./src/package.ts",
-      "import": "./lib/esm/package.js"
+      "import": "./lib/esm/package.js",
+      "require": "./lib/cjs/package.js"
     },
     "./styles.css": {
       "development": "./src/Calendar.module.css",
-      "import": "./lib/esm/Calendar.module.css"
+      "import": "./lib/esm/Calendar.module.css",
+      "require": "./lib/cjs/Calendar.module.css"
     },
     "./*.js": {
       "types": "./lib/esm/*.d.ts",
       "development": "./src/*.ts",
-      "import": "./lib/esm/*.js"
+      "import": "./lib/esm/*.js",
+      "require": "./lib/cjs/*.js"
     },
     "./*": {
       "types": "./lib/esm/*.d.ts",
       "development": "./src/*.ts",
-      "import": "./lib/esm/*.js"
+      "import": "./lib/esm/*.js",
+      "require": "./lib/cjs/*.js"
     }
   },
   "typesVersions": {
@@ -74,7 +80,8 @@
   "dependencies": {
     "@_linked/core": "2.14.4",
     "@_linked/css": "0.2.0",
-    "@_linked/primitives": "1.0.7"
+    "@_linked/primitives": "1.0.7",
+    "rrule": "2.8.1"
   },
   "peerDependencies": {
     "react": ">=18.2.0",
