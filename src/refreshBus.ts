@@ -1,9 +1,9 @@
 import React from 'react';
 
 // Refresh bus — the missing LINKED reactivity layer (WP25 §4). LINKED's linkedComponent/linkedSetComponent
-// are fetch-on-mount snapshots; a graph mutation (UI drag/drop OR GIA verb) emits no notification. Every
-// write path pings the bus; a calendar query keyed to `useRefreshVersion(bus)` re-fetches. Reusable beyond
-// the calendar. Generic — destined for @_linked/calendar.
+// are fetch-on-mount snapshots; a graph mutation needs a committed-change adapter. Domain packages bridge
+// their authoritative graph feed into this compatibility bus; callers must not ping optimistically from
+// write callbacks. A query keyed to `useRefreshVersion(bus)` then re-fetches. Reusable beyond the calendar.
 export interface RefreshBus {
   ping(): void;
   subscribe(fn: () => void): () => void;
@@ -37,5 +37,5 @@ export function useRefreshVersion(bus: RefreshBus): number {
   );
 }
 
-/** App-wide default bus — Serve write verbs ping this; the calendar query keys to it. */
+/** App-wide compatibility bus — a domain's committed-change adapter pings this. */
 export const calendarBus: RefreshBus = createRefreshBus();
