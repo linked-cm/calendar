@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { calendarTranslations, defaultCalendarText } from '../src/index.js';
 
 const require = createRequire(import.meta.url);
-const sourceFiles = ['Calendar.tsx', 'EventPopover.tsx', 'TimeGrid.tsx'];
+const sourceFiles = ['Calendar.tsx', 'EventPopover.tsx', 'ResourceGrid.tsx', 'TimeGrid.tsx'];
 
 describe('@_linked/calendar presentation standards', () => {
   it('uses LINKED primitives instead of raw interactive and typography controls', async () => {
@@ -35,7 +35,7 @@ describe('@_linked/calendar presentation standards', () => {
     );
     // These are instance-level presentation values supplied through React's style object. They
     // encode event color/accent and calculated geometry, rather than theme decisions.
-    const definedAtRuntime = new Set(['a', 'c', 'hour-h', 'm-bar-h', 'm-date-h']);
+    const definedAtRuntime = new Set(['a', 'c', 'hour-h', 'm-bar-h', 'm-date-h', 'resource-color']);
     const integrationSeamsWithLiteralDefaults = new Set(['calendar-mobile-navigation-clearance']);
     const used = [...css.matchAll(/var\(--([a-zA-Z0-9-]+)/g)].map((match) => match[1]);
 

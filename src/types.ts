@@ -1,7 +1,7 @@
 // @_linked/calendar — shape-agnostic contracts. This package knows nothing of Serve Shapes, Causes, or
 // sponsors. A host adapter maps its domain into CalEventData and passes change events back to Shape verbs.
 
-export type CalView = 'month' | 'week' | 'day' | 'agenda';
+export type CalView = 'month' | 'week' | 'day' | 'agenda' | 'resource';
 
 /** A flat, render-ready calendar item. The host app maps its domain (Serve: Event/Mission) into these. */
 export interface CalEventData {
@@ -26,6 +26,9 @@ export interface CalEventData {
   virtualUrl?: string;
   /** host-specific tag, e.g. 'mission' | 'event' — the engine treats it as opaque */
   kind?: string;
+  /** Opaque resource projection keys used by the optional resource view. The host maps canonical people,
+   * rooms, equipment, roles, or other schedulable resources to these ids; the engine never owns them. */
+  resourceIds?: readonly string[];
   /** true for a generated recurrence instance (vs the stored base) */
   recurringInstance?: boolean;
   /** host-computed attention marker — the engine renders a small dot on the card with `label` as its
@@ -57,6 +60,17 @@ export interface CalLane {
   visible: boolean;
   /** opaque host key for team lanes (Serve: the Team id) */
   sourceId?: string;
+}
+
+/** A render-ready schedulable resource column. This is a controlled projection, not a generic RDF Shape. */
+export interface CalResource {
+  id: string;
+  name: string;
+  color?: string;
+  /** Opaque host category such as person, room, equipment, or role. */
+  kind?: string;
+  /** Arbitrary host payload carried through untouched. */
+  meta?: Record<string, unknown>;
 }
 
 /** A pending calendar invite the viewer can accept / reject. */

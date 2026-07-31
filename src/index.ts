@@ -3,7 +3,7 @@
 import './package.js';
 
 export * from './package.js';
-export type { CalEventData, CalView, CalRange, CalLane, CalInvite, CalConnection, CalSyncDirection, CalProviderOption } from './types.js';
+export type { CalEventData, CalView, CalRange, CalLane, CalResource, CalInvite, CalConnection, CalSyncDirection, CalProviderOption } from './types.js';
 export { CAL_PROVIDERS } from './types.js';
 export { Calendar, type CalLabels, type CalendarProps } from './Calendar.js';
 export { expandRule, expandEvents } from './recurrence.js';

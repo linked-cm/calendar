@@ -19,6 +19,9 @@ their own canonical Shape verbs. The package never becomes an authoritative even
 - RFC 5545 recurrence strings are parsed by the BSD-3-Clause `rrule` package behind the bounded
   `expandRule`/`expandEvents` adapter. RRULE, DTSTART, RDATE, and EXDATE remain graph-authored inputs; the
   returned occurrences are view projections only.
+- The optional resource view accepts host-projected `CalResource` records and `CalEventData.resourceIds`.
+  Resource IDs stay opaque: people, rooms, equipment, and roles remain canonical in their owning graph
+  Shapes, while one event may be displayed in several columns without being copied.
 
 ```tsx
 import { Calendar, type CalEventData } from '@_linked/calendar';

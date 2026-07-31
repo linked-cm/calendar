@@ -792,8 +792,97 @@
   text-overflow: ellipsis;
 }
 
+/* Resource view — host-projected people, rooms, equipment, or roles. Resource identity remains opaque to
+   the engine; one event may appear in several columns without duplicating its canonical graph resource. */
+.resourceGrid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(220px, 1fr);
+  gap: var(--calendar-space-sm, var(--list-item-gap));
+  overflow-x: auto;
+  padding-bottom: var(--calendar-space-xs, var(--control-gap));
+  scrollbar-gutter: stable;
+}
+.resourceColumn {
+  min-width: 0;
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--calendar-space-xs, var(--control-gap));
+  padding: var(--calendar-space-sm, var(--list-item-gap));
+  border: 1px solid var(--box-border);
+  border-top: 3px solid var(--resource-color);
+  border-radius: var(--box-radius);
+  background: var(--calendar-surface-bg, var(--surface-bg));
+}
+.resourceHeading {
+  margin: 0;
+  font-family: var(--heading-font-family);
+  font-size: var(--calendar-body-text-size, var(--typography-font-size));
+  color: var(--heading-color);
+}
+.resourceEvents {
+  display: flex;
+  flex-direction: column;
+  gap: var(--calendar-space-xs, var(--control-gap));
+}
+.resourceEvent {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  gap: var(--calendar-space-xs, var(--control-gap));
+  padding: var(--calendar-space-xs, var(--control-gap));
+  text-align: left;
+  border: 1px solid var(--box-border);
+  border-radius: var(--list-item-radius);
+  background: color-mix(in srgb, var(--c) 12%, var(--box-bg));
+  color: var(--text-primary);
+}
+.resourceEvent:hover,
+.resourceEvent:focus-visible {
+  background: color-mix(in srgb, var(--c) 22%, var(--box-bg));
+}
+.resourceEventAccent {
+  width: 3px;
+  flex: 0 0 3px;
+  border-radius: var(--radius-full);
+  background: var(--a, var(--resource-color));
+}
+.resourceEventBody {
+  min-width: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--calendar-space-2xs, var(--popover-gap));
+}
+.resourceEventTime,
+.resourceEventLocation,
+.resourceColumnEmpty {
+  font-family: var(--typography-font-family);
+  font-size: var(--calendar-compact-text-size, var(--typography-small-size));
+  color: var(--calendar-muted-text, var(--typography-auxiliary-color));
+}
+.resourceEventTitle {
+  overflow: hidden;
+  font-family: var(--typography-font-family);
+  font-size: var(--calendar-small-text-size, var(--typography-small-size));
+  color: var(--text-primary);
+  text-overflow: ellipsis;
+}
+.resourceColumnEmpty {
+  padding: var(--calendar-space-sm, var(--list-item-gap));
+  text-align: center;
+}
+
 /* phones: the floating NavBar pill owns the bottom band — lift the reschedule confirm above it */
 @media (max-width: 767px) {
+  .resourceGrid {
+    grid-auto-flow: row;
+    grid-auto-columns: unset;
+    grid-template-columns: minmax(0, 1fr);
+    overflow-x: visible;
+  }
   .tgConfirm {
     bottom: calc(var(--calendar-space-md, var(--box-gap)) + env(safe-area-inset-bottom, 0px) + var(--calendar-mobile-navigation-clearance, 0px));
   }

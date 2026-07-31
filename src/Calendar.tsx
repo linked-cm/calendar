@@ -1,6 +1,7 @@
 import React from 'react';
-import type { CalEventData, CalView } from './types.js';
+import type { CalEventData, CalResource, CalView } from './types.js';
 import { TimeGrid } from './TimeGrid.js';
+import { ResourceGrid } from './ResourceGrid.js';
 import { EventPopover } from './EventPopover.js';
 import { dayKey, dayKeyTz, formatTime, formatTimeZone, isCrossTz } from './tz.js';
 import { registerPackageExport } from './package.js';
@@ -11,7 +12,7 @@ import { IconButton } from '@_linked/primitives/components/IconButton';
 import style from './Calendar.module.css';
 
 // Calendar — the headless, themeable engine (generic; → @_linked/calendar). Controlled: events in,
-// interactions out. Month / Week / Day / Agenda. Displays in the VIEWER's `timeZone`; events carry their
+// interactions out. Month / Week / Day / Agenda / Resource. Displays in the VIEWER's `timeZone`; events carry their
 // own location tz, so a cross-tz event shows both times. Token-themed; colours resolved by the host.
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -25,12 +26,16 @@ export interface CalLabels {
   today: string;
   previous: string;
   next: string;
-  viewName: (v: CalView) => string; // Month | Week | Day | Agenda
+  viewName: (v: CalView) => string; // Month | Week | Day | Agenda | Resources
   viewSwitcher: string; // aria-label for the view tablist
   loading: string;
   allDay: string;
   more: (n: number) => string; // "+N more"
   empty: string;
+  resourceView: string;
+  resourceEmpty: string;
+  resourceColumnEmpty: string;
+  unassigned: string;
   start: string;
   end: string;
   save: string;
@@ -57,6 +62,10 @@ const DEFAULT_LABELS: CalLabels = {
   allDay: defaultCalendarText.allDay,
   more: (n) => defaultCalendarText.more.replace('{count}', String(n)),
   empty: defaultCalendarText.empty,
+  resourceView: defaultCalendarText.resourceView,
+  resourceEmpty: defaultCalendarText.resourceEmpty,
+  resourceColumnEmpty: defaultCalendarText.resourceColumnEmpty,
+  unassigned: defaultCalendarText.unassigned,
   start: defaultCalendarText.start,
   end: defaultCalendarText.end,
   save: defaultCalendarText.save,
@@ -85,6 +94,8 @@ const monthMatrix = (cursor: Date) => {
 
 export interface CalendarProps {
   events: CalEventData[];
+  /** Optional host-projected resources. Supplying this contract enables the Resource view tab. */
+  resources?: readonly CalResource[];
   view: CalView;
   cursor: Date;
   timeZone?: string;
@@ -106,7 +117,7 @@ export interface CalendarProps {
   labels?: Partial<CalLabels>;
 }
 
-export const Calendar: React.FC<CalendarProps> = ({ events, view, cursor, timeZone, onView, onCursor, onOpen, onCheckIn, onMove, onCreate, renderPopoverExtra, loading, locale = 'en-US', labels }) => {
+export const Calendar: React.FC<CalendarProps> = ({ events, resources, view, cursor, timeZone, onView, onCursor, onOpen, onCheckIn, onMove, onCreate, renderPopoverExtra, loading, locale = 'en-US', labels }) => {
   const today = new Date();
   const lab: CalLabels = { ...DEFAULT_LABELS, ...labels };
   const weekdays = React.useMemo(() => weekdayShort(locale), [locale]);
@@ -115,11 +126,11 @@ export const Calendar: React.FC<CalendarProps> = ({ events, view, cursor, timeZo
   const onSelect = (e: CalEventData, x: number, y: number) => setPop({ e, x, y });
   const step = (dir: number) => {
     if (view === 'week') onCursor(addDays(cursor, dir * 7));
-    else if (view === 'day') onCursor(addDays(cursor, dir));
+    else if (view === 'day' || view === 'resource') onCursor(addDays(cursor, dir));
     else onCursor(new Date(cursor.getFullYear(), cursor.getMonth() + dir, 1));
   };
   const heading =
-    view === 'day'
+    view === 'day' || view === 'resource'
       ? cursor.toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric' })
       : view === 'week'
         ? (() => {
@@ -127,6 +138,10 @@ export const Calendar: React.FC<CalendarProps> = ({ events, view, cursor, timeZo
             return `${w[0].toLocaleDateString(locale, { month: 'short', day: 'numeric' })} – ${w[6].toLocaleDateString(locale, { month: 'short', day: 'numeric' })}`;
           })()
         : cursor.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+
+  const availableViews: CalView[] = resources
+    ? ['month', 'week', 'day', 'agenda', 'resource']
+    : ['month', 'week', 'day', 'agenda'];
 
   return (
     <div className={style.cal}>
@@ -138,7 +153,7 @@ export const Calendar: React.FC<CalendarProps> = ({ events, view, cursor, timeZo
           <Heading as="h2" className={style.title}>{heading}</Heading>
         </div>
         <div className={style.views} role="tablist" aria-label={lab.viewSwitcher}>
-          {(['month', 'week', 'day', 'agenda'] as CalView[]).map((v) => (
+          {availableViews.map((v) => (
             <Button key={v} type="button" variant="ghost" size="small" role="tab" aria-selected={view === v} className={style.viewBtn} data-active={view === v || undefined} onClick={() => onView(v)}>
               {lab.viewName(v)}
             </Button>
@@ -152,6 +167,8 @@ export const Calendar: React.FC<CalendarProps> = ({ events, view, cursor, timeZo
         <MonthGrid cursor={cursor} events={events} today={today} tz={timeZone} weekdays={weekdays} more={lab.more} onSelect={onSelect} onDayOpen={(d) => { onCursor(startOfDay(d)); onView('day'); }} />
       ) : view === 'agenda' ? (
         <Agenda cursor={cursor} events={events} today={today} tz={timeZone} weekdays={weekdays} allDayLabel={lab.allDay} emptyLabel={lab.empty} locale={locale} onSelect={onSelect} />
+      ) : view === 'resource' ? (
+        <ResourceGrid cursor={cursor} events={events} resources={resources ?? []} labels={lab} tz={timeZone} onSelect={onSelect} />
       ) : (
         <TimeGrid days={view === 'day' ? [cursor] : weekOf(cursor)} events={events} tz={timeZone} weekdays={weekdays} locale={locale} labels={lab} onSelect={onSelect} onMove={onMove} onCreate={onCreate} />
       )}
