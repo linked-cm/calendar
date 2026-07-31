@@ -10,7 +10,12 @@ their own canonical Shape verbs. The package never becomes an authoritative even
   here.
 - Serve's Event/Mission/RSVP/Resource mappings remain in `serve-community/src/services/calendar`.
 - The Schedule organizer add-on supplies a separate adapter over its authorized Event and occurrence queries.
-- Host themes provide semantic CSS values. The package does not own a Serve or Create Now palette.
+- Interactive and heading elements compose `@_linked/primitives`; the package does not create competing
+  atoms.
+- Calendar-specific CSS seams fall back to the component/type tokens shipped by `@_linked/css`. Host themes
+  may override those seams, but the package does not own a Serve or Create Now palette.
+- English source copy and stable translation keys live in `src/translations/en.json`. Consumers may pass a
+  translated `labels` contract without forking the component or its markup.
 
 ```tsx
 import { Calendar, type CalEventData } from '@_linked/calendar';

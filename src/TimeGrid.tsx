@@ -1,7 +1,9 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import type { CalEventData } from './types.js';
+import type { CalLabels } from './Calendar.js';
 import { dayKey, dayKeyTz, minutesIntoDay, formatTime, instantFromZoned } from './tz.js';
+import { Button } from '@_linked/primitives/components/Button';
 import style from './Calendar.module.css';
 
 // TimeGrid — week/day time-grid engine (generic; → @_linked/calendar). Gesture state lives at the GRID
@@ -62,7 +64,8 @@ export const TimeGrid: React.FC<{
   /** localized short weekday names (Sun-first); BCP-47 locale for time/weekday formatting. */
   weekdays?: string[];
   locale?: string;
-}> = ({ days, events, tz, onSelect, onMove, onCreate, weekdays = WEEKDAYS, locale = 'en-US' }) => {
+  labels: CalLabels;
+}> = ({ days, events, tz, onSelect, onMove, onCreate, weekdays = WEEKDAYS, locale = 'en-US', labels }) => {
   const colsRef = React.useRef<HTMLDivElement>(null);
   const N = days.length;
   const dayKeys = React.useMemo(() => days.map(dayKeyLocal), [days]);
@@ -248,11 +251,11 @@ export const TimeGrid: React.FC<{
       </div>
       {allDay.placed.length > 0 && (
         <div className={style.tgAllDay} style={{ gridTemplateColumns: `56px repeat(${N}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${allDay.lanes}, 22px)` }}>
-          <span className={style.tgAllDayLabel}>all-day</span>
+          <span className={style.tgAllDayLabel}>{labels.allDay}</span>
           {allDay.placed.map(({ e, startIdx, endIdx, lane }) => (
-            <button key={e.id} type="button" className={style.tgAllDayEvent} style={{ gridColumn: `${startIdx + 2} / ${endIdx + 3}`, gridRow: lane + 1, ['--c' as string]: e.color ?? 'var(--control-accent)', ['--a' as string]: e.accent ?? e.color ?? 'var(--control-accent)' }} onClick={(ev) => onSelect?.(e, ev.clientX, ev.clientY)} title={e.title}>
+            <Button key={e.id} type="button" variant="ghost" size="small" className={style.tgAllDayEvent} style={{ gridColumn: `${startIdx + 2} / ${endIdx + 3}`, gridRow: lane + 1, ['--c' as string]: e.color ?? 'var(--control-accent)', ['--a' as string]: e.accent ?? e.color ?? 'var(--control-accent)' }} onClick={(ev) => onSelect?.(e, ev.clientX, ev.clientY)} title={e.title}>
               {e.title}
-            </button>
+            </Button>
           ))}
         </div>
       )}
@@ -286,22 +289,24 @@ export const TimeGrid: React.FC<{
                   const durMin = Math.max(SNAP, (end.getTime() - start.getTime()) / 60000);
                   const active = drag?.e.id === e.id || rez?.e.id === e.id;
                   return (
-                    <button
+                    <Button
                       key={e.id}
                       type="button"
+                      variant="ghost"
+                      size="small"
                       className={style.tgEvent}
                       data-dragging={active || undefined}
                       data-continues={!isLast || undefined}
                       style={{ top: `calc(var(--hour-h) * ${topMin / 60})`, height: `calc(var(--hour-h) * ${durMin / 60})`, left: `calc(${(lane / lanes) * 100}% + 2px)`, width: `calc(${100 / lanes}% - 4px)`, ['--c' as string]: e.color ?? 'var(--control-accent)', ['--a' as string]: e.accent ?? e.color ?? 'var(--control-accent)' }}
                       onPointerDown={(ev) => onEventDown(ev, e)}
-                      title="Tap to open · hold/drag to move (across days) · drag either edge to resize"
+                      title={labels.interactionHint}
                     >
                       {onMove && isFirst && <span className={style.tgResizeTop} onPointerDown={(ev) => onResizeDown(ev, e, 'start')} aria-hidden />}
                       {e.alert && isFirst && <span className={style.tgAlert} data-tone={e.alert.tone} title={e.alert.label} role="img" aria-label={e.alert.label} />}
-                      <span className={style.tgEvTime}>{isFirst ? formatTime(start, tz) : '↳ continued'}</span>
+                      <span className={style.tgEvTime}>{isFirst ? formatTime(start, tz) : `↳ ${labels.continued}`}</span>
                       <span className={style.tgEvTitle}>{e.title}</span>
                       {onMove && isLast && <span className={style.tgResize} onPointerDown={(ev) => onResizeDown(ev, e, 'end')} aria-hidden />}
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -326,12 +331,12 @@ export const TimeGrid: React.FC<{
               return `${startStr} – ${endStr}`;
             })()}
           </span>
-          <button type="button" className={style.tgConfirmYes} onClick={confirmDraft}>
-            Confirm
-          </button>
-          <button type="button" className={style.tgConfirmNo} onClick={() => setDraft(null)}>
-            Cancel
-          </button>
+          <Button type="button" size="small" className={style.tgConfirmYes} onClick={confirmDraft}>
+            {labels.confirm}
+          </Button>
+          <Button type="button" variant="outline" size="small" className={style.tgConfirmNo} onClick={() => setDraft(null)}>
+            {labels.cancel}
+          </Button>
         </div>,
         document.body,
       )}

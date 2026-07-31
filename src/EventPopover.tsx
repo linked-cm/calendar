@@ -1,6 +1,11 @@
 import React from 'react';
 import type { CalEventData } from './types.js';
+import type { CalLabels } from './Calendar.js';
 import { formatTime, formatTimeZone, isCrossTz, inputValue, instantFromInput, dayKeyTz } from './tz.js';
+import { Button } from '@_linked/primitives/components/Button';
+import { Heading } from '@_linked/primitives/components/Heading';
+import { Input } from '@_linked/primitives/components/Input';
+import { Label } from '@_linked/primitives/components/Label';
 import style from './Calendar.module.css';
 
 // EventPopover — the single-click quick card (generic; → @_linked/calendar). Quick actions adapt to the
@@ -15,6 +20,7 @@ export const EventPopover: React.FC<{
   x: number;
   y: number;
   tz?: string;
+  labels: CalLabels;
   onClose: () => void;
   onExpand: (e: CalEventData) => void;
   onCheckIn?: (e: CalEventData) => void;
@@ -22,7 +28,7 @@ export const EventPopover: React.FC<{
   onReschedule?: (e: CalEventData, start: Date, end: Date) => void;
   /** host-supplied extra content (Serve: a compact coverage summary for this item) */
   extra?: React.ReactNode;
-}> = ({ event: e, x, y, tz, onClose, onExpand, onCheckIn, onReschedule, extra }) => {
+}> = ({ event: e, x, y, tz, labels, onClose, onExpand, onCheckIn, onReschedule, extra }) => {
   const cross = isCrossTz(e.start, e.tz, tz);
   // check-in relevance is host-computed per the viewer's privileges (a check-in POSITION, or an attendee
   // day-of) — see serve-calendar-visibility. The engine honours `meta.canCheckIn` when the host sets it,
@@ -58,64 +64,64 @@ export const EventPopover: React.FC<{
   };
   return (
     <>
-      <div className={style.popBackdrop} onClick={onClose} aria-hidden />
+      <Button type="button" variant="ghost" className={style.popBackdrop} onClick={onClose} aria-label={labels.close} />
       <div className={style.pop} style={{ left, top, width: W }} role="dialog" aria-label={String(e.title)}>
         <div className={style.popHead}>
           <span className={style.popDot} style={{ background: e.color ?? 'var(--control-accent)' }} />
-          <div className={style.popTitle}>{e.title}</div>
+          <Heading as="h3" className={style.popTitle}>{e.title}</Heading>
         </div>
         <div className={style.popMeta}>
           {editing ? (
             <div className={style.popEdit}>
-              <label className={style.popField}>
-                <span>Start</span>
-                <input type="datetime-local" className={style.popInput} value={sVal} onChange={(ev) => setSVal(ev.target.value)} />
-              </label>
-              <label className={style.popField}>
-                <span>End</span>
-                <input type="datetime-local" className={style.popInput} value={eVal} onChange={(ev) => setEVal(ev.target.value)} />
-              </label>
+              <Label className={style.popField}>
+                <span>{labels.start}</span>
+                <Input type="datetime-local" size="small" className={style.popInput} value={sVal} onChange={(ev) => setSVal(ev.target.value)} />
+              </Label>
+              <Label className={style.popField}>
+                <span>{labels.end}</span>
+                <Input type="datetime-local" size="small" className={style.popInput} value={eVal} onChange={(ev) => setEVal(ev.target.value)} />
+              </Label>
               <div className={style.popEditRow}>
-                <button type="button" className={style.popSave} onClick={saveTime}>Save</button>
-                <button type="button" className={style.popEditCancel} onClick={() => { setSVal(inputValue(e.start, tz)); setEVal(inputValue(e.end, tz)); setEditing(false); }}>Cancel</button>
+                <Button type="button" size="small" className={style.popSave} onClick={saveTime}>{labels.save}</Button>
+                <Button type="button" variant="outline" size="small" className={style.popEditCancel} onClick={() => { setSVal(inputValue(e.start, tz)); setEVal(inputValue(e.end, tz)); setEditing(false); }}>{labels.cancel}</Button>
               </div>
             </div>
           ) : (
             <div className={style.popTimeRow}>
-              <span>{e.allDay ? 'All day' : `${formatTime(e.start, tz)} – ${formatTime(e.end, tz)}`}</span>
+              <span>{e.allDay ? labels.allDay : `${formatTime(e.start, tz)} – ${formatTime(e.end, tz)}`}</span>
               {onReschedule && !e.allDay && (
-                <button type="button" className={style.popEditBtn} onClick={() => setEditing(true)}>Edit</button>
+                <Button type="button" variant="ghost" size="small" className={style.popEditBtn} onClick={() => setEditing(true)}>{labels.edit}</Button>
               )}
             </div>
           )}
-          {cross && !e.allDay && <div className={style.popCross}>{formatTimeZone(e.start, e.tz)} · event’s local time</div>}
+          {cross && !e.allDay && <div className={style.popCross}>{labels.eventLocalTime(formatTimeZone(e.start, e.tz))}</div>}
           {e.location && <div className={style.popLoc}>{e.location}</div>}
         </div>
         {extra && <div className={style.popExtra}>{extra}</div>}
         <div className={style.popActions}>
           {directions && (
-            <a className={style.popAction} href={directions} target="_blank" rel="noreferrer" onClick={onClose}>
-              Directions
-            </a>
+            <Button asChild variant="outline" size="small" className={style.popAction}>
+              <a href={directions} target="_blank" rel="noreferrer" onClick={onClose}>{labels.directions}</a>
+            </Button>
           )}
           {e.virtualUrl && (
-            <a className={style.popAction} href={e.virtualUrl} target="_blank" rel="noreferrer" onClick={onClose}>
-              Join
-            </a>
+            <Button asChild variant="outline" size="small" className={style.popAction}>
+              <a href={e.virtualUrl} target="_blank" rel="noreferrer" onClick={onClose}>{labels.join}</a>
+            </Button>
           )}
-          <button type="button" className={style.popAction} onClick={share}>
-            Share
-          </button>
+          <Button type="button" variant="outline" size="small" className={style.popAction} onClick={share}>
+            {labels.share}
+          </Button>
           {showCheckIn && (
-            <button type="button" className={style.popAction} onClick={() => { onCheckIn!(e); onClose(); }}>
-              Check in
-            </button>
+            <Button type="button" variant="outline" size="small" className={style.popAction} onClick={() => { onCheckIn!(e); onClose(); }}>
+              {labels.checkIn}
+            </Button>
           )}
         </div>
         {e.meta?.expandable !== false && (
-          <button type="button" className={style.popExpand} onClick={() => { onExpand(e); onClose(); }}>
-            Expand ↗
-          </button>
+          <Button type="button" size="small" className={style.popExpand} onClick={() => { onExpand(e); onClose(); }}>
+            {labels.expand}
+          </Button>
         )}
       </div>
     </>

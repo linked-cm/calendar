@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "packageName": "@_linked/calendar",
+  "shapes": [],
+  "components": [
+    {
+      "componentIri": "https://linked.cm/comp/calendar/Calendar",
+      "entries": [
+        { "key": "calendar.today", "sourceText": "Today" },
+        { "key": "calendar.previous", "sourceText": "Previous" },
+        { "key": "calendar.next", "sourceText": "Next" },
+        { "key": "calendar.view.month", "sourceText": "Month" },
+        { "key": "calendar.view.week", "sourceText": "Week" },
+        { "key": "calendar.view.day", "sourceText": "Day" },
+        { "key": "calendar.view.agenda", "sourceText": "Agenda" },
+        { "key": "calendar.viewSwitcher", "sourceText": "Calendar view" },
+        { "key": "calendar.loading", "sourceText": "Loading…" },
+        { "key": "calendar.allDay", "sourceText": "All day" },
+        { "key": "calendar.more", "sourceText": "+{count} more", "format": "icu" },
+        { "key": "calendar.empty", "sourceText": "Nothing scheduled this month." },
+        { "key": "calendar.start", "sourceText": "Start" },
+        { "key": "calendar.end", "sourceText": "End" },
+        { "key": "calendar.save", "sourceText": "Save" },
+        { "key": "calendar.cancel", "sourceText": "Cancel" },
+        { "key": "calendar.edit", "sourceText": "Edit" },
+        { "key": "calendar.eventLocalTime", "sourceText": "{time} · event’s local time", "format": "icu" },
+        { "key": "calendar.directions", "sourceText": "Directions" },
+        { "key": "calendar.join", "sourceText": "Join" },
+        { "key": "calendar.share", "sourceText": "Share" },
+        { "key": "calendar.checkIn", "sourceText": "Check in" },
+        { "key": "calendar.expand", "sourceText": "Expand ↗" },
+        { "key": "calendar.close", "sourceText": "Close calendar details" },
+        { "key": "calendar.continued", "sourceText": "continued" },
+        { "key": "calendar.confirm", "sourceText": "Confirm" },
+        { "key": "calendar.interactionHint", "sourceText": "Tap to open · hold or drag to move across days · drag either edge to resize" }
+      ]
+    }
+  ],
+  "labels": [],
+  "controlledValues": [],
+  "workflowRoles": [],
+  "skosConcepts": [],
+  "content": []
+}

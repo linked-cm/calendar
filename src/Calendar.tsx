@@ -3,8 +3,12 @@ import type { CalEventData, CalView } from './types.js';
 import { TimeGrid } from './TimeGrid.js';
 import { EventPopover } from './EventPopover.js';
 import { dayKey, dayKeyTz, formatTime, formatTimeZone, isCrossTz } from './tz.js';
-import style from './Calendar.module.css';
 import { registerPackageExport } from './package.js';
+import { defaultCalendarText } from './translations.js';
+import { Button } from '@_linked/primitives/components/Button';
+import { Heading } from '@_linked/primitives/components/Heading';
+import { IconButton } from '@_linked/primitives/components/IconButton';
+import style from './Calendar.module.css';
 
 // Calendar — the headless, themeable engine (generic; → @_linked/calendar). Controlled: events in,
 // interactions out. Month / Week / Day / Agenda. Displays in the VIEWER's `timeZone`; events carry their
@@ -26,16 +30,48 @@ export interface CalLabels {
   loading: string;
   allDay: string;
   more: (n: number) => string; // "+N more"
+  empty: string;
+  start: string;
+  end: string;
+  save: string;
+  cancel: string;
+  edit: string;
+  eventLocalTime: (time: string) => string;
+  directions: string;
+  join: string;
+  share: string;
+  checkIn: string;
+  expand: string;
+  close: string;
+  continued: string;
+  confirm: string;
+  interactionHint: string;
 }
 const DEFAULT_LABELS: CalLabels = {
-  today: 'Today',
-  previous: 'Previous',
-  next: 'Next',
-  viewName: (v) => v[0].toUpperCase() + v.slice(1),
-  viewSwitcher: 'Calendar view',
-  loading: 'Loading…',
-  allDay: 'All day',
-  more: (n) => `+${n} more`,
+  today: defaultCalendarText.today,
+  previous: defaultCalendarText.previous,
+  next: defaultCalendarText.next,
+  viewName: (v) => defaultCalendarText[v],
+  viewSwitcher: defaultCalendarText.viewSwitcher,
+  loading: defaultCalendarText.loading,
+  allDay: defaultCalendarText.allDay,
+  more: (n) => defaultCalendarText.more.replace('{count}', String(n)),
+  empty: defaultCalendarText.empty,
+  start: defaultCalendarText.start,
+  end: defaultCalendarText.end,
+  save: defaultCalendarText.save,
+  cancel: defaultCalendarText.cancel,
+  edit: defaultCalendarText.edit,
+  eventLocalTime: (time) => defaultCalendarText.eventLocalTime.replace('{time}', time),
+  directions: defaultCalendarText.directions,
+  join: defaultCalendarText.join,
+  share: defaultCalendarText.share,
+  checkIn: defaultCalendarText.checkIn,
+  expand: defaultCalendarText.expand,
+  close: defaultCalendarText.close,
+  continued: defaultCalendarText.continued,
+  confirm: defaultCalendarText.confirm,
+  interactionHint: defaultCalendarText.interactionHint,
 };
 const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const dayKeyLocal = (d: Date) => dayKey(d.getFullYear(), d.getMonth() + 1, d.getDate());
@@ -96,16 +132,16 @@ export const Calendar: React.FC<CalendarProps> = ({ events, view, cursor, timeZo
     <div className={style.cal}>
       <header className={style.head}>
         <div className={style.nav}>
-          <button type="button" className={style.navBtn} aria-label={lab.previous} onClick={() => step(-1)}>‹</button>
-          <button type="button" className={style.today} onClick={() => onCursor(new Date())}>{lab.today}</button>
-          <button type="button" className={style.navBtn} aria-label={lab.next} onClick={() => step(1)}>›</button>
-          <h2 className={style.title}>{heading}</h2>
+          <IconButton type="button" variant="outline" size="small" className={style.navBtn} aria-label={lab.previous} onClick={() => step(-1)}>‹</IconButton>
+          <Button type="button" variant="outline" size="small" className={style.today} onClick={() => onCursor(new Date())}>{lab.today}</Button>
+          <IconButton type="button" variant="outline" size="small" className={style.navBtn} aria-label={lab.next} onClick={() => step(1)}>›</IconButton>
+          <Heading as="h2" className={style.title}>{heading}</Heading>
         </div>
         <div className={style.views} role="tablist" aria-label={lab.viewSwitcher}>
           {(['month', 'week', 'day', 'agenda'] as CalView[]).map((v) => (
-            <button key={v} type="button" role="tab" aria-selected={view === v} className={style.viewBtn} data-active={view === v || undefined} onClick={() => onView(v)}>
+            <Button key={v} type="button" variant="ghost" size="small" role="tab" aria-selected={view === v} className={style.viewBtn} data-active={view === v || undefined} onClick={() => onView(v)}>
               {lab.viewName(v)}
-            </button>
+            </Button>
           ))}
         </div>
       </header>
@@ -115,11 +151,11 @@ export const Calendar: React.FC<CalendarProps> = ({ events, view, cursor, timeZo
       ) : view === 'month' ? (
         <MonthGrid cursor={cursor} events={events} today={today} tz={timeZone} weekdays={weekdays} more={lab.more} onSelect={onSelect} onDayOpen={(d) => { onCursor(startOfDay(d)); onView('day'); }} />
       ) : view === 'agenda' ? (
-        <Agenda cursor={cursor} events={events} today={today} tz={timeZone} weekdays={weekdays} allDayLabel={lab.allDay} locale={locale} onSelect={onSelect} />
+        <Agenda cursor={cursor} events={events} today={today} tz={timeZone} weekdays={weekdays} allDayLabel={lab.allDay} emptyLabel={lab.empty} locale={locale} onSelect={onSelect} />
       ) : (
-        <TimeGrid days={view === 'day' ? [cursor] : weekOf(cursor)} events={events} tz={timeZone} weekdays={weekdays} locale={locale} onSelect={onSelect} onMove={onMove} onCreate={onCreate} />
+        <TimeGrid days={view === 'day' ? [cursor] : weekOf(cursor)} events={events} tz={timeZone} weekdays={weekdays} locale={locale} labels={lab} onSelect={onSelect} onMove={onMove} onCreate={onCreate} />
       )}
-      {pop && <EventPopover event={pop.e} x={pop.x} y={pop.y} tz={timeZone} onClose={() => setPop(null)} onExpand={(e) => onOpen?.(e)} onCheckIn={onCheckIn} onReschedule={onMove} extra={renderPopoverExtra?.(pop.e, () => setPop(null))} />}
+      {pop && <EventPopover event={pop.e} x={pop.x} y={pop.y} tz={timeZone} labels={lab} onClose={() => setPop(null)} onExpand={(e) => onOpen?.(e)} onCheckIn={onCheckIn} onReschedule={onMove} extra={renderPopoverExtra?.(pop.e, () => setPop(null))} />}
     </div>
   );
 };
@@ -178,10 +214,10 @@ const MonthGrid: React.FC<{ cursor: Date; events: CalEventData[]; today: Date; t
         return (
           <div key={wi} className={style.mWeek}>
             {week.map((d, di) => (
-              <div key={d.toISOString()} className={style.mCell} data-out={d.getMonth() !== cursor.getMonth() || undefined} data-today={dayKeyLocal(d) === todayKey || undefined} role="button" tabIndex={0} onClick={() => onDayOpen?.(d)} onKeyDown={(ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); onDayOpen?.(d); } }}>
+              <Button key={d.toISOString()} type="button" variant="ghost" className={style.mCell} data-out={d.getMonth() !== cursor.getMonth() || undefined} data-today={dayKeyLocal(d) === todayKey || undefined} onClick={() => onDayOpen?.(d)}>
                 <div className={style.mDate}>{d.getDate()}</div>
                 {hiddenPerDay[di] > 0 && <div className={style.mMore}>{more(hiddenPerDay[di])}</div>}
-              </div>
+              </Button>
             ))}
             {/* event bars overlay the cells; pointer-events fall through empty areas so the day still opens */}
             <div className={style.mBars}>
@@ -189,9 +225,11 @@ const MonthGrid: React.FC<{ cursor: Date; events: CalEventData[]; today: Date; t
                 const cross = isCrossTz(p.e.start, p.e.tz, tz);
                 const multi = p.span > 1 || p.e.allDay;
                 return (
-                  <button
+                  <Button
                     key={p.e.id}
                     type="button"
+                    variant="ghost"
+                    size="small"
                     className={style.mBar}
                     data-multi={multi || undefined}
                     style={{ left: `calc(${(p.s / 7) * 100}% + 3px)`, width: `calc(${(p.span / 7) * 100}% - 6px)`, top: `calc(var(--m-date-h) + ${p.lane} * (var(--m-bar-h) + 2px))`, ['--c' as string]: p.e.color ?? 'var(--control-accent)', ['--a' as string]: p.e.accent ?? p.e.color ?? 'var(--control-accent)' }}
@@ -201,7 +239,7 @@ const MonthGrid: React.FC<{ cursor: Date; events: CalEventData[]; today: Date; t
                     <span className={style.mDot} />
                     <span className={style.mBarText}>{multi ? p.e.title : `${formatTime(p.e.start, tz)} ${p.e.title}`}</span>
                     {p.e.alert && <span className={style.alertDot} data-tone={p.e.alert.tone} title={p.e.alert.label} role="img" aria-label={p.e.alert.label} />}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -212,7 +250,7 @@ const MonthGrid: React.FC<{ cursor: Date; events: CalEventData[]; today: Date; t
   );
 };
 
-const Agenda: React.FC<{ cursor: Date; events: CalEventData[]; today: Date; tz?: string; weekdays: string[]; allDayLabel: string; locale: string; onSelect?: (e: CalEventData, x: number, y: number) => void }> = ({ cursor, events, today, tz, weekdays, allDayLabel, locale, onSelect }) => {
+const Agenda: React.FC<{ cursor: Date; events: CalEventData[]; today: Date; tz?: string; weekdays: string[]; allDayLabel: string; emptyLabel: string; locale: string; onSelect?: (e: CalEventData, x: number, y: number) => void }> = ({ cursor, events, today, tz, weekdays, allDayLabel, emptyLabel, locale, onSelect }) => {
   const inMonth = events.filter((e) => {
     const k = dayKeyTz(e.start, tz);
     return k >= dayKey(cursor.getFullYear(), cursor.getMonth() + 1, 1) && k <= dayKey(cursor.getFullYear(), cursor.getMonth() + 1, 31);
@@ -224,7 +262,7 @@ const Agenda: React.FC<{ cursor: Date; events: CalEventData[]; today: Date; tz?:
     if (last && last.key === k) last.items.push(e);
     else groups.push({ key: k, label: startOfDay(e.start), items: [e] });
   }
-  if (!groups.length) return <div className={style.empty}>Nothing scheduled this month.</div>;
+  if (!groups.length) return <div className={style.empty}>{emptyLabel}</div>;
   const todayKey = dayKeyTz(today, tz);
   return (
     <div className={style.agenda}>
@@ -238,7 +276,7 @@ const Agenda: React.FC<{ cursor: Date; events: CalEventData[]; today: Date; tz?:
             {g.items.map((e) => {
               const cross = isCrossTz(e.start, e.tz, tz);
               return (
-                <button key={e.id} type="button" className={style.agItem} onClick={(ev) => onSelect?.(e, ev.clientX, ev.clientY)}>
+                <Button key={e.id} type="button" variant="ghost" className={style.agItem} onClick={(ev) => onSelect?.(e, ev.clientX, ev.clientY)}>
                   <span className={style.agBar} style={{ background: e.accent ?? e.color ?? 'var(--control-accent)' }} />
                   <span className={style.agTime}>
                     {e.allDay ? allDayLabel : formatTime(e.start, tz)}
@@ -247,7 +285,7 @@ const Agenda: React.FC<{ cursor: Date; events: CalEventData[]; today: Date; tz?:
                   <span className={style.agTitle}>{e.title}</span>
                   {e.alert && <span className={style.alertDot} data-tone={e.alert.tone} title={e.alert.label} role="img" aria-label={e.alert.label} />}
                   {e.location && <span className={style.agLoc}>{e.location}</span>}
-                </button>
+                </Button>
               );
             })}
           </div>
