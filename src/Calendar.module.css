@@ -1,0 +1,800 @@
+/* Calendar engine — token-themed (no hardcoded colors). Month grid + agenda. */
+.cal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.navBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--box-border);
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  font-size: var(--text-lg);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.navBtn:hover {
+  background: var(--bg-hover);
+}
+.today {
+  height: 32px;
+  padding: 0 var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--box-border);
+  background: var(--bg-panel);
+  color: var(--text-secondary);
+  font-family: var(--label-font-family);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+.today:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.title {
+  font-family: var(--heading-font-family);
+  font-size: var(--text-xl);
+  color: var(--text-primary);
+  margin: 0 0 0 var(--space-sm);
+}
+.views {
+  display: flex;
+  gap: var(--space-2xs);
+  padding: var(--space-2xs);
+  border-radius: var(--radius-full);
+  background: var(--bg-panel);
+  border: 1px solid var(--box-border);
+}
+.viewBtn {
+  padding: var(--space-2xs) var(--space-md);
+  border-radius: var(--radius-full);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--label-font-family);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+.viewBtn[data-active] {
+  background: var(--control-accent);
+  color: var(--control-text-contrast);
+}
+.empty {
+  padding: 48px var(--space-lg);
+  text-align: center;
+  color: var(--text-auxiliary);
+  font-family: var(--typography-font-family);
+  font-size: var(--text-sm);
+}
+
+/* ── month grid ── */
+.grid {
+  display: grid;
+  /* minmax(0,1fr) → EVERY column is exactly equal; long event titles can't stretch a column */
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--box-border);
+  border: 1px solid var(--box-border);
+  border-radius: var(--radius-box);
+  overflow: hidden;
+}
+.dow {
+  background: var(--bg-2);
+  padding: var(--space-xs);
+  text-align: center;
+  font-family: var(--label-font-family);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-auxiliary);
+}
+.cell {
+  background: var(--box-bg);
+  min-height: 104px;
+  min-width: 0; /* allow the column to stay 1fr; content clips instead of expanding it */
+  padding: var(--space-2xs);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+.cell[data-out] {
+  background: var(--bg-2);
+}
+.cell[data-out] .date {
+  color: var(--text-auxiliary);
+}
+.date {
+  font-family: var(--typography-font-family);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  align-self: flex-end;
+  padding: 0 var(--space-2xs);
+}
+.cell[data-today] .date {
+  background: var(--control-accent);
+  color: var(--control-text-contrast);
+  border-radius: var(--radius-full);
+  min-width: 20px;
+  text-align: center;
+}
+.chips {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: 1px var(--space-2xs);
+  border-radius: var(--radius-sm);
+  border: none;
+  background: color-mix(in srgb, var(--c) 14%, transparent);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+.chip:hover {
+  background: color-mix(in srgb, var(--c) 24%, transparent);
+}
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--c);
+  flex-shrink: 0;
+}
+.chipText {
+  font-family: var(--typography-font-family);
+  font-size: var(--text-2xs);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.more {
+  font-family: var(--typography-font-family);
+  font-size: var(--text-2xs);
+  color: var(--text-auxiliary);
+  padding: 0 var(--space-2xs);
+}
+
+/* phones: shorter cells, hide chip text (dots only) */
+@media (max-width: 640px) {
+  .cell {
+    min-height: 64px;
+  }
+  .chipText,
+  .more {
+    display: none;
+  }
+}
+
+/* ── agenda ── */
+.agenda {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+.agDay {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: var(--space-md);
+}
+.agDate {
+  text-align: center;
+}
+.agDow {
+  font-family: var(--label-font-family);
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  color: var(--text-auxiliary);
+}
+.agNum {
+  font-family: var(--heading-font-family);
+  font-size: var(--text-xl);
+  color: var(--text-primary);
+}
+.agDate[data-today] .agNum {
+  color: var(--control-accent);
+}
+.agItems {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+.agItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border-radius: var(--radius-box);
+  border: 1px solid var(--box-border);
+  background: var(--box-bg);
+  cursor: pointer;
+  text-align: left;
+}
+.agItem:hover {
+  border-color: color-mix(in srgb, var(--control-accent) 40%, var(--box-border));
+}
+.agBar {
+  width: 3px;
+  align-self: stretch;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+.agTime {
+  font-family: var(--label-font-family);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  min-width: 64px;
+}
+.agTitle {
+  font-family: var(--heading-font-family);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  flex: 1;
+}
+.agLoc {
+  font-family: var(--typography-font-family);
+  font-size: var(--text-xs);
+  color: var(--text-auxiliary);
+}
+.agCross {
+  display: block;
+  font-family: var(--typography-font-family);
+  font-size: var(--text-2xs);
+  color: var(--info);
+  margin-top: 2px;
+}
+
+/* ── week / day time grid ── */
+.tg {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--box-border);
+  border-radius: var(--radius-box);
+  overflow: hidden;
+}
+.tgHead {
+  display: flex;
+  border-bottom: 1px solid var(--box-border);
+  background: var(--bg-2);
+}
+.tgDayHead {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--space-2xs);
+  padding: var(--space-xs);
+  border-left: 1px solid var(--box-border);
+}
+.tgDow {
+  font-family: var(--label-font-family);
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  color: var(--text-auxiliary);
+}
+.tgNum {
+  font-family: var(--heading-font-family);
+  font-size: var(--text-base);
+  color: var(--text-primary);
+}
+.tgDayHead[data-today] .tgNum {
+  color: var(--control-accent);
+}
+.tgAllDay {
+  display: grid;
+  gap: 2px 0;
+  padding: var(--space-2xs) 0;
+  border-bottom: 1px solid var(--box-border);
+  background: var(--bg-2);
+}
+.tgAllDayLabel {
+  grid-column: 1;
+  grid-row: 1 / -1;
+  align-self: center;
+  padding-left: var(--space-xs);
+  font-family: var(--label-font-family);
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  color: var(--text-auxiliary);
+}
+.tgAllDayEvent {
+  display: block;
+  height: 20px;
+  margin: 0 2px;
+  padding: 0 var(--space-xs);
+  border: none;
+  border-left: 3px solid var(--a, var(--c));
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--c) 22%, transparent);
+  color: var(--text-primary);
+  font-size: var(--text-2xs);
+  line-height: 20px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.tgBody {
+  display: flex;
+  align-items: flex-start; /* columns keep their true 24h height instead of stretching to the viewport */
+  position: relative;
+  max-height: 68vh;
+  overflow-y: auto;
+}
+.tgGutter {
+  width: 56px;
+  flex-shrink: 0;
+}
+.tgHour {
+  height: var(--hour-h);
+  position: relative;
+}
+.tgHourLabel {
+  position: absolute;
+  top: -7px;
+  right: var(--space-xs);
+  font-family: var(--label-font-family);
+  font-size: var(--text-2xs);
+  color: var(--text-auxiliary);
+}
+.tgCols {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  height: calc(var(--hour-h) * 24); /* the columns area — grid-level pointer target for cross-day drag */
+  touch-action: pan-y; /* allow vertical scroll; long-press starts a move, a scroll cancels the press */
+}
+.tgCol {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  position: relative;
+  border-left: 1px solid var(--box-border);
+  cursor: pointer;
+}
+.tgSlot {
+  height: var(--hour-h);
+  border-top: 1px solid color-mix(in srgb, var(--box-border) 60%, transparent);
+}
+.tgNow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--danger);
+  z-index: 3;
+  pointer-events: none;
+}
+.tgSel {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  background: color-mix(in srgb, var(--control-accent) 22%, transparent);
+  border: 1px dashed var(--control-accent);
+  border-radius: var(--radius-sm);
+  z-index: 2;
+  pointer-events: none;
+}
+.tgEvent {
+  position: absolute;
+  z-index: 2;
+  overflow: hidden;
+  border: none;
+  border-left: 3px solid var(--a, var(--c));
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--c) 18%, var(--box-bg));
+  padding: 3px var(--space-xs);
+  text-align: left;
+  cursor: grab;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+/* organizer attention marker — a small dot on the card (warn = amber, danger = red) */
+.alertDot,
+.tgAlert {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-full);
+  background: var(--warning);
+}
+.alertDot {
+  display: inline-block;
+  margin-left: var(--space-2xs);
+}
+.alertDot[data-tone='danger'],
+.tgAlert[data-tone='danger'] {
+  background: var(--danger);
+}
+.tgAlert {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--bg-panel) 70%, transparent);
+}
+.tgEvent[data-continues] {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom: 2px dashed color-mix(in srgb, var(--c) 60%, transparent); /* runs into the next day */
+}
+.tgEvent[data-dragging] {
+  cursor: grabbing;
+  opacity: 0.92;
+  box-shadow: var(--box-shadow);
+  z-index: 4;
+}
+/* resize grips — top edge changes the start, bottom edge changes the end */
+.tgResize,
+.tgResizeTop {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 8px;
+  cursor: ns-resize;
+}
+.tgResize {
+  bottom: 0;
+  border-bottom-left-radius: var(--radius-sm);
+  border-bottom-right-radius: var(--radius-sm);
+}
+.tgResizeTop {
+  top: 0;
+  border-top-left-radius: var(--radius-sm);
+  border-top-right-radius: var(--radius-sm);
+}
+.tgEvent:hover .tgResize,
+.tgEvent:hover .tgResizeTop {
+  background: color-mix(in srgb, var(--c) 45%, transparent);
+}
+/* ghost left where the event was, during a move + while awaiting confirmation */
+.tgGhost {
+  position: absolute;
+  z-index: 1;
+  border: 1px dashed var(--c);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--c) 8%, transparent);
+  opacity: 0.7;
+  pointer-events: none;
+}
+/* confirm/cancel — a centered floating toast (not crammed into the column) until the move is committed */
+.tgConfirm {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-full);
+  background: var(--bg-rich, var(--box-bg));
+  border: 1px solid var(--control-accent);
+  box-shadow: var(--box-shadow);
+  white-space: nowrap;
+}
+.tgConfirmText {
+  font-family: var(--typography-font-family);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.tgConfirmYes,
+.tgConfirmNo {
+  font-family: var(--label-font-family);
+  font-size: var(--text-xs);
+  border-radius: var(--radius-full);
+  padding: var(--space-2xs) var(--space-md);
+  cursor: pointer;
+  border: 1px solid var(--box-border);
+}
+.tgConfirmYes {
+  background: var(--control-accent);
+  color: var(--control-text-contrast);
+  border-color: transparent;
+}
+.tgConfirmNo {
+  background: transparent;
+  color: var(--text-secondary);
+}
+.tgEvTime {
+  font-family: var(--label-font-family);
+  font-size: var(--text-2xs);
+  color: var(--text-secondary);
+}
+.tgEvTitle {
+  font-family: var(--typography-font-family);
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── quick-action popover (single click) ── */
+.popBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+}
+.pop {
+  position: fixed;
+  z-index: 71;
+  background: var(--bg-rich, var(--box-bg));
+  border: 1px solid var(--box-border);
+  border-radius: var(--radius-box);
+  box-shadow: var(--box-shadow);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+.popHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.popDot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+.popTitle {
+  font-family: var(--heading-font-family);
+  font-size: var(--text-base);
+  color: var(--text-primary);
+}
+.popMeta {
+  font-family: var(--typography-font-family);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.popExtra {
+  padding-top: var(--space-2xs);
+  margin-top: var(--space-2xs);
+  border-top: 1px solid var(--box-border);
+}
+.popTimeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+}
+.popEditBtn {
+  font-family: var(--label-font-family);
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  color: var(--control-accent);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.popEdit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+.popField {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  font-size: var(--text-2xs);
+  color: var(--text-auxiliary);
+}
+.popInput {
+  font-family: var(--typography-font-family);
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+  background: var(--bg-panel);
+  border: 1px solid var(--box-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2xs) var(--space-2xs);
+}
+.popEditRow {
+  display: flex;
+  gap: var(--space-xs);
+  margin-top: var(--space-2xs);
+}
+.popSave,
+.popEditCancel {
+  font-family: var(--label-font-family);
+  font-size: var(--text-xs);
+  line-height: 1.2;
+  border-radius: var(--radius-full);
+  padding: var(--space-xs) var(--space-md);
+  cursor: pointer;
+}
+.popSave {
+  color: var(--control-text-contrast);
+  background: var(--control-accent);
+  border: none;
+}
+.popEditCancel {
+  color: var(--text-secondary);
+  background: var(--bg-panel);
+  border: 1px solid var(--box-border);
+}
+.popCross {
+  color: var(--info);
+}
+.popLoc {
+  color: var(--text-auxiliary);
+}
+.popActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+}
+.popAction {
+  font-family: var(--label-font-family);
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+  text-decoration: none;
+  background: var(--bg-panel);
+  border: 1px solid var(--box-border);
+  border-radius: var(--radius-full);
+  padding: var(--space-2xs) var(--space-sm);
+  cursor: pointer;
+}
+.popAction:hover {
+  background: var(--bg-hover);
+}
+.popExpand {
+  font-family: var(--label-font-family);
+  font-size: var(--text-xs);
+  color: var(--control-text-contrast);
+  background: var(--control-accent);
+  border: none;
+  border-radius: var(--radius-full);
+  padding: var(--space-2xs) var(--space-sm);
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+/* ── Month view (spanning bars) — multi-day events span their days, single-day events occupy one column.
+   Each week is a 7-col grid of cells with an absolutely-positioned bar overlay above. ── */
+.month {
+  --m-date-h: 22px;
+  --m-bar-h: 18px;
+  border: 1px solid var(--box-border);
+  border-radius: var(--radius-box);
+  overflow: hidden;
+}
+.dowRow {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-bottom: 1px solid var(--box-border);
+}
+.mWeek {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  /* room for the date row + the lane cap of bars */
+  min-height: calc(var(--m-date-h) + 4 * (var(--m-bar-h) + 2px) + var(--space-sm));
+  border-bottom: 1px solid var(--box-border);
+}
+.mWeek:last-child {
+  border-bottom: none;
+}
+.mCell {
+  position: relative;
+  min-width: 0;
+  background: var(--box-bg);
+  border-right: 1px solid var(--box-border);
+  padding: var(--space-2xs);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+.mCell:last-child {
+  border-right: none;
+}
+.mCell[data-out] {
+  background: var(--bg-2);
+}
+.mCell[data-out] .mDate {
+  color: var(--text-auxiliary);
+}
+.mDate {
+  align-self: flex-end;
+  font-family: var(--typography-font-family);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  padding: 0 2px;
+  height: calc(var(--m-date-h) - 4px);
+}
+.mCell[data-today] .mDate {
+  background: var(--control-accent);
+  color: var(--control-text-contrast);
+  border-radius: var(--radius-full);
+  min-width: 20px;
+  text-align: center;
+}
+.mMore {
+  margin-top: auto;
+  font-family: var(--typography-font-family);
+  font-size: var(--text-2xs);
+  color: var(--text-auxiliary);
+  padding: 0 2px;
+}
+/* bar overlay — sits above the cells; empty space lets clicks fall through to open the day */
+.mBars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.mBar {
+  position: absolute;
+  height: var(--m-bar-h);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: 0 var(--space-xs);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--c) 16%, transparent);
+  cursor: pointer;
+  pointer-events: auto;
+  text-align: left;
+  overflow: hidden;
+}
+.mBar[data-multi] {
+  background: color-mix(in srgb, var(--c) 30%, transparent);
+}
+.mBar:hover,
+.mBar:focus-visible {
+  outline: none;
+  background: color-mix(in srgb, var(--c) 40%, transparent);
+}
+.mDot {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--a, var(--c));
+}
+.mBarText {
+  font-family: var(--typography-font-family);
+  font-size: var(--text-2xs);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* phones: the floating NavBar pill owns the bottom band — lift the reschedule confirm above it */
+@media (max-width: 767px) {
+  .tgConfirm {
+    bottom: calc(var(--space-md) + var(--safe-bottom, 0px) + var(--nav-clearance));
+  }
+}
