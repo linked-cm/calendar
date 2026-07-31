@@ -4,6 +4,27 @@
   flex-direction: column;
   gap: var(--calendar-space-md, var(--box-gap));
 }
+
+/* One semantic event-card state model for every calendar projection. Consumers may override the named
+   calendar seams; otherwise both states are mathematical tints of the event color, which defaults to the
+   host's control accent. LINKED Button consumes the aliases so its primitive interaction contract remains
+   intact without replacing the calendar's domain presentation. */
+.agItem,
+.tgAllDayEvent,
+.tgEvent,
+.mBar,
+.resourceEvent {
+  --button-primary-bg: var(
+    --calendar-event-surface-bg,
+    color-mix(in srgb, var(--c, var(--control-accent)) 12%, var(--box-bg))
+  );
+  --button-primary-bg-hover: var(
+    --calendar-event-surface-bg-hover,
+    color-mix(in srgb, var(--c, var(--control-accent)) 20%, var(--box-bg))
+  );
+  --button-primary-color: var(--text-primary);
+  --button-primary-color-hover: var(--text-primary);
+}
 .head {
   display: flex;
   align-items: center;
@@ -231,7 +252,7 @@
   text-align: left;
 }
 .agItem:hover {
-  border-color: color-mix(in srgb, var(--control-accent) 40%, var(--box-border));
+  border-color: color-mix(in srgb, var(--c, var(--control-accent)) 40%, var(--box-border));
 }
 .agBar {
   width: 3px;
@@ -324,9 +345,8 @@
   margin: 0 2px;
   padding: 0 var(--calendar-space-xs, var(--control-gap));
   border: none;
-  border-left: 3px solid var(--a, var(--c));
   border-radius: var(--list-item-radius);
-  background: color-mix(in srgb, var(--c) 22%, transparent);
+  box-shadow: inset 3px 0 0 var(--a, var(--c));
   color: var(--text-primary);
   font-size: var(--calendar-compact-text-size, var(--typography-small-size));
   line-height: 20px;
@@ -403,9 +423,8 @@
   z-index: 2;
   overflow: hidden;
   border: none;
-  border-left: 3px solid var(--a, var(--c));
   border-radius: var(--list-item-radius);
-  background: color-mix(in srgb, var(--c) 18%, var(--box-bg));
+  box-shadow: inset 3px 0 0 var(--a, var(--c));
   padding: 3px var(--calendar-space-xs, var(--control-gap));
   text-align: left;
   cursor: grab;
@@ -444,7 +463,7 @@
 .tgEvent[data-dragging] {
   cursor: grabbing;
   opacity: 0.92;
-  box-shadow: var(--box-shadow);
+  box-shadow: var(--box-shadow), inset 3px 0 0 var(--a, var(--c));
   z-index: 4;
 }
 /* resize grips — top edge changes the start, bottom edge changes the end */
@@ -707,9 +726,12 @@
   border-bottom: none;
 }
 .mCell {
+  --button-primary-bg: var(--calendar-day-surface-bg, var(--box-bg));
+  --button-primary-bg-hover: var(--calendar-day-surface-bg-hover, var(--bg-hover));
+  --button-primary-color: var(--text-primary);
+  --button-primary-color-hover: var(--text-primary);
   position: relative;
   min-width: 0;
-  background: var(--box-bg);
   border-right: 1px solid var(--box-border);
   padding: var(--calendar-space-2xs, var(--popover-gap));
   cursor: pointer;
@@ -720,7 +742,7 @@
   border-right: none;
 }
 .mCell[data-out] {
-  background: var(--calendar-surface-bg, var(--surface-bg));
+  --button-primary-bg: var(--calendar-surface-bg, var(--surface-bg));
 }
 .mCell[data-out] .mDate {
   color: var(--text-auxiliary);
@@ -762,19 +784,20 @@
   padding: 0 var(--calendar-space-xs, var(--control-gap));
   border: none;
   border-radius: var(--list-item-radius);
-  background: color-mix(in srgb, var(--c) 16%, transparent);
   cursor: pointer;
   pointer-events: auto;
   text-align: left;
   overflow: hidden;
 }
 .mBar[data-multi] {
-  background: color-mix(in srgb, var(--c) 30%, transparent);
+  --button-primary-bg: var(
+    --calendar-event-multiday-surface-bg,
+    color-mix(in srgb, var(--c, var(--control-accent)) 18%, var(--box-bg))
+  );
 }
 .mBar:hover,
 .mBar:focus-visible {
   outline: none;
-  background: color-mix(in srgb, var(--c) 40%, transparent);
 }
 .mDot {
   flex-shrink: 0;
@@ -836,12 +859,7 @@
   text-align: left;
   border: 1px solid var(--box-border);
   border-radius: var(--list-item-radius);
-  background: color-mix(in srgb, var(--c) 12%, var(--box-bg));
   color: var(--text-primary);
-}
-.resourceEvent:hover,
-.resourceEvent:focus-visible {
-  background: color-mix(in srgb, var(--c) 22%, var(--box-bg));
 }
 .resourceEventAccent {
   width: 3px;

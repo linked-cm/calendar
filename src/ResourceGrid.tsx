@@ -56,7 +56,7 @@ export const ResourceGrid: React.FC<{
                   <Button
                     key={`${resource.id}:${event.id}`}
                     type="button"
-                    variant="ghost"
+                    variant="solid"
                     className={style.resourceEvent}
                     style={{ ['--c' as string]: event.color ?? 'var(--control-accent)', ['--a' as string]: event.accent ?? event.color ?? 'var(--resource-color)' }}
                     onClick={(pointer) => onSelect?.(event, pointer.clientX, pointer.clientY)}

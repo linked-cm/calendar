@@ -231,7 +231,7 @@ const MonthGrid: React.FC<{ cursor: Date; events: CalEventData[]; today: Date; t
         return (
           <div key={wi} className={style.mWeek}>
             {week.map((d, di) => (
-              <Button key={d.toISOString()} type="button" variant="ghost" className={style.mCell} data-out={d.getMonth() !== cursor.getMonth() || undefined} data-today={dayKeyLocal(d) === todayKey || undefined} onClick={() => onDayOpen?.(d)}>
+              <Button key={d.toISOString()} type="button" variant="solid" className={style.mCell} data-out={d.getMonth() !== cursor.getMonth() || undefined} data-today={dayKeyLocal(d) === todayKey || undefined} onClick={() => onDayOpen?.(d)}>
                 <div className={style.mDate}>{d.getDate()}</div>
                 {hiddenPerDay[di] > 0 && <div className={style.mMore}>{more(hiddenPerDay[di])}</div>}
               </Button>
@@ -245,7 +245,7 @@ const MonthGrid: React.FC<{ cursor: Date; events: CalEventData[]; today: Date; t
                   <Button
                     key={p.e.id}
                     type="button"
-                    variant="ghost"
+                    variant="solid"
                     size="small"
                     className={style.mBar}
                     data-multi={multi || undefined}
@@ -293,7 +293,14 @@ const Agenda: React.FC<{ cursor: Date; events: CalEventData[]; today: Date; tz?:
             {g.items.map((e) => {
               const cross = isCrossTz(e.start, e.tz, tz);
               return (
-                <Button key={e.id} type="button" variant="ghost" className={style.agItem} onClick={(ev) => onSelect?.(e, ev.clientX, ev.clientY)}>
+                <Button
+                  key={e.id}
+                  type="button"
+                  variant="solid"
+                  className={style.agItem}
+                  style={{ ['--c' as string]: e.color ?? 'var(--control-accent)' }}
+                  onClick={(ev) => onSelect?.(e, ev.clientX, ev.clientY)}
+                >
                   <span className={style.agBar} style={{ background: e.accent ?? e.color ?? 'var(--control-accent)' }} />
                   <span className={style.agTime}>
                     {e.allDay ? allDayLabel : formatTime(e.start, tz)}

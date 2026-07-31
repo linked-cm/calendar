@@ -253,7 +253,7 @@ export const TimeGrid: React.FC<{
         <div className={style.tgAllDay} style={{ gridTemplateColumns: `56px repeat(${N}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${allDay.lanes}, 22px)` }}>
           <span className={style.tgAllDayLabel}>{labels.allDay}</span>
           {allDay.placed.map(({ e, startIdx, endIdx, lane }) => (
-            <Button key={e.id} type="button" variant="ghost" size="small" className={style.tgAllDayEvent} style={{ gridColumn: `${startIdx + 2} / ${endIdx + 3}`, gridRow: lane + 1, ['--c' as string]: e.color ?? 'var(--control-accent)', ['--a' as string]: e.accent ?? e.color ?? 'var(--control-accent)' }} onClick={(ev) => onSelect?.(e, ev.clientX, ev.clientY)} title={e.title}>
+            <Button key={e.id} type="button" variant="solid" size="small" className={style.tgAllDayEvent} style={{ gridColumn: `${startIdx + 2} / ${endIdx + 3}`, gridRow: lane + 1, ['--c' as string]: e.color ?? 'var(--control-accent)', ['--a' as string]: e.accent ?? e.color ?? 'var(--control-accent)' }} onClick={(ev) => onSelect?.(e, ev.clientX, ev.clientY)} title={e.title}>
               {e.title}
             </Button>
           ))}
@@ -292,7 +292,7 @@ export const TimeGrid: React.FC<{
                     <Button
                       key={e.id}
                       type="button"
-                      variant="ghost"
+                      variant="solid"
                       size="small"
                       className={style.tgEvent}
                       data-dragging={active || undefined}

@@ -37,12 +37,26 @@ describe('@_linked/calendar presentation standards', () => {
     // encode event color/accent and calculated geometry, rather than theme decisions.
     const definedAtRuntime = new Set(['a', 'c', 'hour-h', 'm-bar-h', 'm-date-h', 'resource-color']);
     const integrationSeamsWithLiteralDefaults = new Set(['calendar-mobile-navigation-clearance']);
+    const derivedEventSurfaceTokens = new Set([
+      'calendar-event-surface-bg',
+      'calendar-event-surface-bg-hover',
+      'calendar-event-multiday-surface-bg',
+    ]);
     const used = [...css.matchAll(/var\(--([a-zA-Z0-9-]+)/g)].map((match) => match[1]);
 
     for (const token of used) {
       if (token.startsWith('calendar-')) {
         if (integrationSeamsWithLiteralDefaults.has(token)) {
           expect(css).toContain(`var(--${token}, 0px)`);
+          continue;
+        }
+        if (derivedEventSurfaceTokens.has(token)) {
+          const fallback = new RegExp(
+            `var\\(--${token},\\s*color-mix\\(in srgb,\\s*var\\(--c,\\s*var\\(--control-accent\\)\\)\\s+\\d+%,\\s*var\\(--box-bg\\)\\)\\s*\\)`,
+          );
+          expect(css, `${token} must derive from the event/control accent and box surface`).toMatch(
+            fallback,
+          );
           continue;
         }
         const fallback = new RegExp(
@@ -59,6 +73,34 @@ describe('@_linked/calendar presentation standards', () => {
     }
 
     expect(css).not.toMatch(/var\(--(?:bg-2|bg-rich|text-secondary|label-font-family|space-(?:2xs|xs|sm|md|lg)|safe-bottom|nav-clearance)(?:[,)]|\s)/);
+  });
+
+  it('uses one accent-derived event surface model instead of the primitive ghost jump', async () => {
+    const sources = await Promise.all(
+      sourceFiles.map((file) => readFile(new URL(`../src/${file}`, import.meta.url), 'utf8')),
+    );
+    const source = sources.join('\n');
+    const css = await readFile(new URL('../src/Calendar.module.css', import.meta.url), 'utf8');
+
+    for (const className of ['agItem', 'tgAllDayEvent', 'tgEvent', 'mBar', 'resourceEvent']) {
+      const marker = `className={style.${className}}`;
+      const markerIndex = source.indexOf(marker);
+      const buttonIndex = source.lastIndexOf('<Button', markerIndex);
+      const openingTag = source.slice(buttonIndex, source.indexOf('>', markerIndex) + 1);
+
+      expect(markerIndex, `${className} must remain a LINKED Button`).toBeGreaterThan(-1);
+      expect(openingTag, `${className} must use the token-remappable solid state`).toContain(
+        'variant="solid"',
+      );
+    }
+
+    expect(css).toContain('--calendar-event-surface-bg,');
+    expect(css).toContain('--calendar-event-surface-bg-hover,');
+    expect(css).toContain('var(--c, var(--control-accent)) 12%');
+    expect(css).toContain('var(--c, var(--control-accent)) 20%');
+    expect(css.match(/--calendar-event-surface-bg,/g)).toHaveLength(1);
+    expect(css.match(/--calendar-event-surface-bg-hover,/g)).toHaveLength(1);
+    expect(css.match(/box-shadow: inset 3px 0 0 var\(--a, var\(--c\)\);/g)).toHaveLength(2);
   });
 
   it('ships one complete component-owned translation catalog', () => {
