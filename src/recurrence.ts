@@ -1,5 +1,17 @@
 import type { CalEventData, CalRange } from './types.js';
-import { rrulestr } from 'rrule';
+import * as rruleModule from 'rrule';
+
+// rrule publishes ESM metadata over a CommonJS main. Vite exposes named exports
+// in its browser prebundle but only `default` in Node SSR, so normalize the
+// namespace without requiring either export form statically.
+const rruleApi = rruleModule as typeof rruleModule & {
+  default?: typeof rruleModule;
+};
+const rrulestr = rruleApi.rrulestr ?? rruleApi.default?.rrulestr;
+
+if (!rrulestr) {
+  throw new Error('rrule package does not expose rrulestr');
+}
 
 function overlaps(start: Date, end: Date, win: CalRange): boolean {
   return start < win.end && end > win.start;

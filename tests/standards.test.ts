@@ -116,4 +116,12 @@ describe('@_linked/calendar presentation standards', () => {
     expect(entries.every(({ sourceText }) => sourceText.length > 0)).toBe(true);
     expect(defaultCalendarText.interactionHint).toContain('drag');
   });
+
+  it('loads rrule through its browser and SSR compatible namespace boundary', async () => {
+    const recurrence = await readFile(new URL('../src/recurrence.ts', import.meta.url), 'utf8');
+
+    expect(recurrence).toContain("import * as rruleModule from 'rrule'");
+    expect(recurrence).not.toMatch(/import\s+\{\s*rrulestr\s*\}\s+from\s+['"]rrule['"]/);
+    expect(recurrence).not.toMatch(/import\s+rrulePackage\s+from\s+['"]rrule['"]/);
+  });
 });
