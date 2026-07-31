@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import type { CalEventData } from './types.js';
+import type { CalEventData, CalEventSelect } from './types.js';
 import type { CalLabels } from './Calendar.js';
 import { dayKey, dayKeyTz, minutesIntoDay, formatTime, instantFromZoned } from './tz.js';
 import { Button } from '@_linked/primitives/components/Button';
@@ -58,7 +58,7 @@ export const TimeGrid: React.FC<{
   days: Date[];
   events: CalEventData[];
   tz?: string;
-  onSelect?: (e: CalEventData, x: number, y: number) => void;
+  onSelect?: CalEventSelect;
   onMove?: (e: CalEventData, start: Date, end: Date) => void;
   onCreate?: (start: Date, end: Date) => void;
   /** localized short weekday names (Sun-first); BCP-47 locale for time/weekday formatting. */
@@ -84,7 +84,7 @@ export const TimeGrid: React.FC<{
   const [sel, setSel] = React.useState<{ dayIndex: number; fromMin: number; toMin: number } | null>(null);
   const [drag, setDrag] = React.useState<{ e: CalEventData; grabMin: number; grabDay: number; baseStart: Date; baseEnd: Date } | null>(null);
   const [rez, setRez] = React.useState<{ e: CalEventData; grabMin: number; edge: 'start' | 'end'; baseStart: Date; baseEnd: Date } | null>(null);
-  const press = React.useRef<{ e: CalEventData; grabMin: number; grabDay: number; baseStart: Date; baseEnd: Date; downY: number; timer: number } | null>(null);
+  const press = React.useRef<{ e: CalEventData; trigger: HTMLElement; grabMin: number; grabDay: number; baseStart: Date; baseEnd: Date; downY: number; timer: number } | null>(null);
 
   const shift = (d: Date, m: number) => new Date(d.getTime() + m * 60000);
   const geomOf = (e: CalEventData): { start: Date; end: Date } => (draft?.id === e.id ? { start: draft.start, end: draft.end } : opt?.id === e.id ? { start: opt.start, end: opt.end } : { start: e.start, end: e.end });
@@ -161,12 +161,13 @@ export const TimeGrid: React.FC<{
     }
   };
 
-  const onEventDown = (ev: React.PointerEvent, e: CalEventData) => {
+  const onEventDown = (ev: React.PointerEvent<HTMLButtonElement>, e: CalEventData) => {
     ev.stopPropagation();
     colsRef.current?.setPointerCapture?.(ev.pointerId);
     const g = geomOf(e);
-    press.current = { e, grabMin: minuteRaw(ev.clientY), grabDay: dayAt(ev.clientX), baseStart: g.start, baseEnd: g.end, downY: ev.clientY, timer: 0 };
-    if (onMove) press.current.timer = window.setTimeout(beginDrag, LONG_PRESS);
+    const nextPress = { e, trigger: ev.currentTarget, grabMin: minuteRaw(ev.clientY), grabDay: dayAt(ev.clientX), baseStart: g.start, baseEnd: g.end, downY: ev.clientY, timer: 0 };
+    press.current = nextPress;
+    if (onMove) nextPress.timer = window.setTimeout(beginDrag, LONG_PRESS);
   };
   const onResizeDown = (ev: React.PointerEvent, e: CalEventData, edge: 'start' | 'end') => {
     ev.stopPropagation();
@@ -221,7 +222,7 @@ export const TimeGrid: React.FC<{
     const p = press.current;
     if (p) {
       clearTimeout(p.timer);
-      if (!gesture) onSelect?.(p.e, ev.clientX, ev.clientY); // a quick tap → host popover
+      if (!gesture) onSelect?.(p.e, ev.clientX, ev.clientY, p.trigger); // a quick tap → host popover
       press.current = null;
     }
     try {
@@ -253,7 +254,7 @@ export const TimeGrid: React.FC<{
         <div className={style.tgAllDay} style={{ gridTemplateColumns: `56px repeat(${N}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${allDay.lanes}, 22px)` }}>
           <span className={style.tgAllDayLabel}>{labels.allDay}</span>
           {allDay.placed.map(({ e, startIdx, endIdx, lane }) => (
-            <Button key={e.id} type="button" variant="solid" size="small" className={style.tgAllDayEvent} style={{ gridColumn: `${startIdx + 2} / ${endIdx + 3}`, gridRow: lane + 1, ['--c' as string]: e.color ?? 'var(--control-accent)', ['--a' as string]: e.accent ?? e.color ?? 'var(--control-accent)' }} onClick={(ev) => onSelect?.(e, ev.clientX, ev.clientY)} title={e.title}>
+            <Button key={e.id} type="button" variant="solid" size="small" className={style.tgAllDayEvent} style={{ gridColumn: `${startIdx + 2} / ${endIdx + 3}`, gridRow: lane + 1, ['--c' as string]: e.color ?? 'var(--control-accent)', ['--a' as string]: e.accent ?? e.color ?? 'var(--control-accent)' }} onClick={(ev) => onSelect?.(e, ev.clientX, ev.clientY, ev.currentTarget)} title={e.title}>
               {e.title}
             </Button>
           ))}
@@ -299,6 +300,11 @@ export const TimeGrid: React.FC<{
                       data-continues={!isLast || undefined}
                       style={{ top: `calc(var(--hour-h) * ${topMin / 60})`, height: `calc(var(--hour-h) * ${durMin / 60})`, left: `calc(${(lane / lanes) * 100}% + 2px)`, width: `calc(${100 / lanes}% - 4px)`, ['--c' as string]: e.color ?? 'var(--control-accent)', ['--a' as string]: e.accent ?? e.color ?? 'var(--control-accent)' }}
                       onPointerDown={(ev) => onEventDown(ev, e)}
+                      onClick={(ev) => {
+                        if (ev.detail !== 0) return;
+                        const bounds = ev.currentTarget.getBoundingClientRect();
+                        onSelect?.(e, bounds.left + bounds.width / 2, bounds.top + bounds.height / 2, ev.currentTarget);
+                      }}
                       title={labels.interactionHint}
                     >
                       {onMove && isFirst && <span className={style.tgResizeTop} onPointerDown={(ev) => onResizeDown(ev, e, 'start')} aria-hidden />}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@_linked/primitives/components/Button';
 import { Heading } from '@_linked/primitives/components/Heading';
-import type { CalEventData, CalResource } from './types.js';
+import type { CalEventData, CalEventSelect, CalResource } from './types.js';
 import type { CalLabels } from './Calendar.js';
 import { formatTime, instantFromZoned, isCrossTz } from './tz.js';
 import style from './Calendar.module.css';
@@ -21,7 +21,7 @@ export const ResourceGrid: React.FC<{
   resources: readonly CalResource[];
   labels: CalLabels;
   tz?: string;
-  onSelect?: (event: CalEventData, x: number, y: number) => void;
+  onSelect?: CalEventSelect;
 }> = ({ cursor, events, resources, labels, tz, onSelect }) => {
   const range = dayRange(cursor, tz);
   const visible = events
@@ -33,7 +33,7 @@ export const ResourceGrid: React.FC<{
     ...(unassigned.length ? [{ id: '__unassigned__' as const, name: labels.unassigned }] : []),
   ];
 
-  if (!columns.length) return <div className={style.empty}>{labels.resourceEmpty}</div>;
+  if (!columns.length) return <div className={style.empty} role="status">{labels.resourceEmpty}</div>;
 
   return (
     <div className={style.resourceGrid} role="region" aria-label={labels.resourceView}>
@@ -59,7 +59,7 @@ export const ResourceGrid: React.FC<{
                     variant="solid"
                     className={style.resourceEvent}
                     style={{ ['--c' as string]: event.color ?? 'var(--control-accent)', ['--a' as string]: event.accent ?? event.color ?? 'var(--resource-color)' }}
-                    onClick={(pointer) => onSelect?.(event, pointer.clientX, pointer.clientY)}
+                    onClick={(pointer) => onSelect?.(event, pointer.clientX, pointer.clientY, pointer.currentTarget)}
                     title={eventLocal ? `${event.title} — ${labels.eventLocalTime(formatTime(event.start, event.tz))}` : event.title}
                   >
                     <span className={style.resourceEventAccent} />

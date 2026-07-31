@@ -584,9 +584,14 @@
   flex-shrink: 0;
 }
 .popTitle {
+  flex: 1;
+  min-width: 0;
   font-family: var(--heading-font-family);
   font-size: var(--calendar-body-text-size, var(--typography-font-size));
   color: var(--text-primary);
+}
+.popClose {
+  flex-shrink: 0;
 }
 .popMeta {
   font-family: var(--typography-font-family);

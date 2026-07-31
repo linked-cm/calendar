@@ -4,6 +4,7 @@ import type { CalLabels } from './Calendar.js';
 import { formatTime, formatTimeZone, isCrossTz, inputValue, instantFromInput, dayKeyTz } from './tz.js';
 import { Button } from '@_linked/primitives/components/Button';
 import { Heading } from '@_linked/primitives/components/Heading';
+import { IconButton } from '@_linked/primitives/components/IconButton';
 import { Input } from '@_linked/primitives/components/Input';
 import { Label } from '@_linked/primitives/components/Label';
 import style from './Calendar.module.css';
@@ -29,6 +30,11 @@ export const EventPopover: React.FC<{
   /** host-supplied extra content (Serve: a compact coverage summary for this item) */
   extra?: React.ReactNode;
 }> = ({ event: e, x, y, tz, labels, onClose, onExpand, onCheckIn, onReschedule, extra }) => {
+  const dialogRef = React.useRef<HTMLDivElement>(null);
+  const closeRef = React.useRef<HTMLButtonElement>(null);
+  const editRef = React.useRef<HTMLButtonElement>(null);
+  const startInputRef = React.useRef<HTMLInputElement>(null);
+  const titleId = React.useId();
   const cross = isCrossTz(e.start, e.tz, tz);
   // check-in relevance is host-computed per the viewer's privileges (a check-in POSITION, or an attendee
   // day-of) — see serve-calendar-visibility. The engine honours `meta.canCheckIn` when the host sets it,
@@ -43,6 +49,45 @@ export const EventPopover: React.FC<{
   const [editing, setEditing] = React.useState(false);
   const [sVal, setSVal] = React.useState(() => inputValue(e.start, tz));
   const [eVal, setEVal] = React.useState(() => inputValue(e.end, tz));
+  React.useEffect(() => {
+    closeRef.current?.focus();
+  }, []);
+  React.useEffect(() => {
+    if (editing) startInputRef.current?.focus();
+  }, [editing]);
+  const cancelEditing = () => {
+    setSVal(inputValue(e.start, tz));
+    setEVal(inputValue(e.end, tz));
+    setEditing(false);
+    if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+      window.requestAnimationFrame(() => editRef.current?.focus());
+    }
+  };
+  const onDialogKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      onClose();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const focusable = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    ) ?? []);
+    if (!focusable.length) {
+      event.preventDefault();
+      dialogRef.current?.focus();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
   const saveTime = () => {
     const s = instantFromInput(sVal, tz);
     const en = instantFromInput(eVal, tz);
@@ -64,18 +109,19 @@ export const EventPopover: React.FC<{
   };
   return (
     <>
-      <Button type="button" variant="ghost" className={style.popBackdrop} onClick={onClose} aria-label={labels.close} />
-      <div className={style.pop} style={{ left, top, width: W }} role="dialog" aria-label={String(e.title)}>
+      <Button type="button" variant="ghost" className={style.popBackdrop} onClick={onClose} tabIndex={-1} aria-hidden="true" />
+      <div ref={dialogRef} className={style.pop} style={{ left, top, width: W }} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} onKeyDown={onDialogKeyDown}>
         <div className={style.popHead}>
           <span className={style.popDot} style={{ background: e.color ?? 'var(--control-accent)' }} />
-          <Heading as="h3" className={style.popTitle}>{e.title}</Heading>
+          <Heading as="h3" className={style.popTitle} id={titleId}>{e.title}</Heading>
+          <IconButton ref={closeRef} type="button" variant="ghost" size="small" className={style.popClose} aria-label={labels.close} onClick={onClose}>×</IconButton>
         </div>
         <div className={style.popMeta}>
           {editing ? (
             <div className={style.popEdit}>
               <Label className={style.popField}>
                 <span>{labels.start}</span>
-                <Input type="datetime-local" size="small" className={style.popInput} value={sVal} onChange={(ev) => setSVal(ev.target.value)} />
+                <Input ref={startInputRef} type="datetime-local" size="small" className={style.popInput} value={sVal} onChange={(ev) => setSVal(ev.target.value)} />
               </Label>
               <Label className={style.popField}>
                 <span>{labels.end}</span>
@@ -83,14 +129,14 @@ export const EventPopover: React.FC<{
               </Label>
               <div className={style.popEditRow}>
                 <Button type="button" size="small" className={style.popSave} onClick={saveTime}>{labels.save}</Button>
-                <Button type="button" variant="outline" size="small" className={style.popEditCancel} onClick={() => { setSVal(inputValue(e.start, tz)); setEVal(inputValue(e.end, tz)); setEditing(false); }}>{labels.cancel}</Button>
+                <Button type="button" variant="outline" size="small" className={style.popEditCancel} onClick={cancelEditing}>{labels.cancel}</Button>
               </div>
             </div>
           ) : (
             <div className={style.popTimeRow}>
               <span>{e.allDay ? labels.allDay : `${formatTime(e.start, tz)} – ${formatTime(e.end, tz)}`}</span>
               {onReschedule && !e.allDay && (
-                <Button type="button" variant="ghost" size="small" className={style.popEditBtn} onClick={() => setEditing(true)}>{labels.edit}</Button>
+                <Button ref={editRef} type="button" variant="ghost" size="small" className={style.popEditBtn} onClick={() => setEditing(true)}>{labels.edit}</Button>
               )}
             </div>
           )}

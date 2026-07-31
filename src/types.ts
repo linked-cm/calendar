@@ -44,6 +44,14 @@ export interface CalRange {
   end: Date;
 }
 
+/** Selection includes the semantic trigger so overlays can restore keyboard focus after closing. */
+export type CalEventSelect = (
+  event: CalEventData,
+  x: number,
+  y: number,
+  trigger?: HTMLElement,
+) => void;
+
 // ── Multi-calendar + external-connection model (generic; part of @_linked/calendar core). The engine
 //    owns these CONTRACTS; the host app (Serve) maps its own domain — RSVPs, roles, ExternalCalendar
 //    shapes — into them. Lanes are toggleable; connections are links to outside calendars. See
