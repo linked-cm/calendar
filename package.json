@@ -78,9 +78,9 @@
     }
   },
   "dependencies": {
-    "@_linked/core": "2.14.4",
-    "@_linked/css": "0.2.0",
-    "@_linked/primitives": "1.0.7",
+    "@_linked/core": "2.18.1",
+    "@_linked/css": "0.3.0",
+    "@_linked/primitives": "1.2.0",
     "rrule": "2.8.1"
   },
   "peerDependencies": {
