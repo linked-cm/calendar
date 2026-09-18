@@ -1,4 +1,4 @@
-import calendarTranslationCatalog from './translations/en.json';
+import calendarTranslationCatalog from './translations/en.json' with { type: 'json' };
 
 type CatalogEntry = {
   key: string;
