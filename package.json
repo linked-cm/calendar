@@ -1,6 +1,6 @@
 {
   "name": "@linked.cm/calendar",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A shape-agnostic, controlled LINKED calendar engine shared by Serve and Create Now applications.",
   "linkedPackage": true,
   "type": "module",
