@@ -22,13 +22,13 @@ describe('@_linked/calendar package identity', () => {
     expect(packageExports.Calendar).toBe(Calendar);
   });
 
-  it('declares buildable ESM/CJS exports and the reviewed recurrence dependency', () => {
-    expect(manifest.main).toBe('lib/cjs/index.js');
+  it('declares ESM-only exports resolved from lib and the reviewed recurrence dependency', () => {
+    expect(manifest.name).toBe('@linked.cm/calendar');
+    expect(manifest.main).toBe('lib/esm/index.js');
     expect(manifest.module).toBe('lib/esm/index.js');
-    expect(manifest.exports['.']).toMatchObject({
-      development: './src/index.ts',
+    expect(manifest.exports['.']).toEqual({
+      types: './lib/esm/index.d.ts',
       import: './lib/esm/index.js',
-      require: './lib/cjs/index.js',
     });
     expect(manifest.dependencies.rrule).toBe('2.8.1');
     expect(manifest.files).toContain('THIRD_PARTY_NOTICES.md');

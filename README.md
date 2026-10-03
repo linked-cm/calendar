@@ -1,6 +1,6 @@
-# `@_linked/calendar`
+# `@linked.cm/calendar`
 
-`@_linked/calendar` is the first-party, shape-agnostic calendar engine shared by LINKED applications.
+`@linked.cm/calendar` is the first-party, shape-agnostic calendar engine shared by LINKED applications.
 It is a controlled projection: hosts provide render-ready calendar items and handle change callbacks through
 their own canonical Shape verbs. The package never becomes an authoritative event store.
 
