@@ -19,6 +19,13 @@ their own canonical Shape verbs. The package never becomes an authoritative even
 - RFC 5545 recurrence strings are parsed by the BSD-3-Clause `rrule` package behind the bounded
   `expandRule`/`expandEvents` adapter. RRULE, DTSTART, RDATE, and EXDATE remain graph-authored inputs; the
   returned occurrences are view projections only.
+- A recurring item repeats in its own time zone. When `CalEventData.tz` is an IANA zone and the rule has no
+  DTSTART of its own, `expandRule` expands the series in that zone's wall time, so a weekly 9:00 stays 9:00
+  across daylight-saving changes and `BYDAY` means the local weekday. `UNTIL`/`EXDATE`/`RDATE` values in `Z`
+  are read as instants. Without `tz` (or with `'UTC'`, an unknown zone, or an explicit DTSTART) the series
+  repeats in UTC as before. `instantFromZonedWallTime({ y, mo, d, hour, minute, second? }, tz)` converts a
+  wall time in a zone to its instant (a nonexistent spring-forward time uses the pre-transition offset, as
+  RFC 5545 reads it; an ambiguous fall-back time resolves to the earlier instant).
 - The optional resource view accepts host-projected `CalResource` records and `CalEventData.resourceIds`.
   Resource IDs stay opaque: people, rooms, equipment, and roles remain canonical in their owning graph
   Shapes, while one event may be displayed in several columns without being copied.
