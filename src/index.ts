@@ -9,5 +9,5 @@ export { Calendar, type CalLabels, type CalendarProps } from './Calendar.js';
 export { expandRule, expandEvents } from './recurrence.js';
 export { rangeForCalendarView } from './range.js';
 export { createRefreshBus, useRefreshVersion, calendarBus, type RefreshBus } from './refreshBus.js';
-export { viewerTz, formatTime, formatTimeZone, isCrossTz, dayKeyTz, inputValue, instantFromInput } from './tz.js';
+export { viewerTz, formatTime, formatTimeZone, isCrossTz, dayKeyTz, inputValue, instantFromInput, instantFromZonedWallTime } from './tz.js';
 export { calendarTranslations, defaultCalendarText } from './translations.js';
