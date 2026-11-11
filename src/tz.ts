@@ -7,17 +7,27 @@ export interface ZonedParts {
   d: number;
   hour: number; // 0-23
   minute: number;
+  second: number;
   weekday: number; // 0=Sun
+}
+
+export interface ZonedWallTime {
+  y: number;
+  mo: number; // 1-12
+  d: number;
+  hour: number; // 0-23
+  minute: number;
+  second?: number;
 }
 
 const WD: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 
 /** Wall-clock parts of an instant in the given tz (or the browser's if omitted). */
 export function zonedParts(date: Date, tz?: string): ZonedParts {
-  const fmt = new Intl.DateTimeFormat('en-US', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, weekday: 'short' });
+  const fmt = new Intl.DateTimeFormat('en-US', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, weekday: 'short' });
   const p: Record<string, string> = {};
   for (const part of fmt.formatToParts(date)) p[part.type] = part.value;
-  return { y: +p.year, mo: +p.month, d: +p.day, hour: p.hour === '24' ? 0 : +p.hour, minute: +p.minute, weekday: WD[p.weekday] ?? 0 };
+  return { y: +p.year, mo: +p.month, d: +p.day, hour: p.hour === '24' ? 0 : +p.hour, minute: +p.minute, second: +p.second, weekday: WD[p.weekday] ?? 0 };
 }
 
 export const dayKey = (y: number, mo: number, d: number) => `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
@@ -89,4 +99,43 @@ export function instantFromZoned(y: number, mo: number, d: number, minutes: numb
     guess = new Date(guess.getTime() - deltaMin * 60000);
   }
   return guess;
+}
+
+function wallMs(ms: number, tz?: string): number {
+  const z = zonedParts(new Date(ms), tz);
+  return Date.UTC(z.y, z.mo - 1, z.d, z.hour, z.minute, z.second);
+}
+
+/** Convert wall-clock parts (including seconds) in `tz` to a real UTC instant via Intl offset probing.
+ *  Spring-forward DST gaps resolve to the first instant whose wall time is not before the target;
+ *  ambiguous fall-back times resolve to the earlier instant. */
+export function instantFromZonedWallTime(parts: ZonedWallTime, tz?: string): Date {
+  const target = Date.UTC(parts.y, parts.mo - 1, parts.d, parts.hour, parts.minute, parts.second ?? 0);
+  if (tz === 'UTC') return new Date(target);
+
+  let guess = target;
+  let firstNotBefore = Infinity;
+
+  for (let i = 0; i < 8; i++) {
+    const wall = wallMs(guess, tz);
+    const delta = wall - target;
+    if (delta === 0) {
+      // Check two hours back to detect whether a fall-back transition produced an earlier matching instant.
+      const prev = guess - 2 * 3600_000;
+      const earlier = target - (wallMs(prev, tz) - prev);
+      if (earlier < guess && wallMs(earlier, tz) === target) {
+        return new Date(earlier);
+      }
+      return new Date(guess);
+    }
+    if (wall >= target && guess < firstNotBefore) {
+      firstNotBefore = guess;
+    }
+    guess -= delta;
+  }
+
+  if (wallMs(guess, tz) >= target && guess < firstNotBefore) {
+    firstNotBefore = guess;
+  }
+  return new Date(Number.isFinite(firstNotBefore) ? firstNotBefore : guess);
 }
